@@ -1,0 +1,471 @@
+* This do_file is used to construct summarized input-output tables
+
+*COUNTRY      : USA
+
+*This version : June 14 2017
+
+*Data Source  : WIOD; nov 2016 update
+
+*Link         : http://www.wiod.org/database/wiots16
+
+*---------------------------------------------------------------------------------------------------------------------------
+*INSTRUCTIONS : Create three .dta files: one with the IO data, one with the SUPPLY data and one with the USE data
+*                                       (IO_Table_XXX, SUP_Table_USA, USE_Table_USA) 
+*               Change the name of the directories and run the code
+*---------------------------------------------------------------------------------------------------------------------------
+
+clear all
+cls
+
+*---------------------------------------------------------------------------------------------------------------------------
+*Step 1: take the I-O table to distinguish between domestic and imported inputs
+
+use "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/IO_Table_USA.dta"
+*use "C:\Users\h1jiv01\Desktop\IO_Table_USA.dta"
+
+*drop if Origin == "TOT" & Code == "II_fob" | Origin == "TOT" & Code == "TXSP" | Origin == "TOT" & Code == "EXP_adj"	| Origin == "TOT" & Code == "PURR"	| Origin == "TOT" & Code == "PURNR"		
+replace Code   = "C10C12"  if Code == "C10-C12"
+replace Code   = "C13C15"  if Code == "C13-C15"
+replace Code   = "C31C32"  if Code == "C31_C32"
+replace Code   = "E37E39"  if Code == "E37-E39"
+replace Code   = "J59J60"  if Code == "J59_J60"
+replace Code   = "M69M70"  if Code == "M69_M70"
+replace Code   = "M74M75"  if Code == "M74_M75"
+replace Code   = "J62J63"  if Code == "J62_J63"
+
+replace Origin = "VA"      if Code == "VA"
+replace Origin = "IntTTM"  if Code == "IntTTM"
+replace Origin = "GO"      if Code == "GO"
+replace Origin = "II_fob"  if Code == "II_fob"
+replace Origin = "II_fob"  if Code == "II_fob"
+replace Origin = "TXSP"    if Code == "TXSP"
+replace Origin = "EXP_adj" if Code == "EXP_adj"
+replace Origin = "PURR"    if Code == "PURR"
+replace Origin = "PURNR"   if Code == "PURNR"
+
+*Now what I have to do is create an imported manufacturing variable and asign a label in origin for it
+*Create an indicator variable for that
+
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C10C12"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C13C15"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C16"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C17"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C18"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C19"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C20"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C21"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C22"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C23"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C24"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C25"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C26"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C27"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C28"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C29"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C30"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C31C32"
+replace Origin = "Manufactures_Imp" if Origin == "Imports" & Code == "C33"
+
+
+gen     one_digit_ind =   . 
+replace one_digit_ind =   1 if Code == "A01" 	 | Code == "A02" 		| Code == "A03"
+replace one_digit_ind =   2 if Code == "B"   	 | Code == "D35" 		| Code == "E36" | Code == "E37E39"
+replace one_digit_ind =   3 if Code == "F"   
+replace one_digit_ind =   4 if Code == "C10C12"  | Code == "C13C15"     | Code == "C16"	| Code == "C17" | Code == "C18" | Code == "C19" |	Code == "C20" |	Code == "C21" |	Code == "C22" |	Code == "C23" | Code == "C24" |	Code == "C25" |Code == "C26" |	Code == "C27" |	Code == "C28" |	Code == "C29" |	Code == "C30" |Code == "C31C32" |	Code == "C33" 
+replace one_digit_ind =   5 if Code == "G45"     | Code == "G46"        | Code == "G47"
+replace one_digit_ind =   6 if Code == "H49"     | Code == "H50"        | Code == "H51" | Code == "H52" | Code == "H53" 
+replace one_digit_ind =   7 if Code == "I" 
+replace one_digit_ind =   8 if Code == "J58"	 | Code == "J59J60"		| Code == "J61"	| Code == "J62J63"
+replace one_digit_ind =   9 if Code == "K64"	 | Code == "K65"	    | Code == "K66"
+replace one_digit_ind =  10 if Code == "L68"
+replace one_digit_ind =  11 if Code == "M69M70"  | Code == "M71"        | Code == "M72" | Code == "M73" | Code == "M74M75" | Code == "N"
+replace one_digit_ind =  12 if Code == "P85"     | Code == "Q" 
+replace one_digit_ind =  13 if Code == "R_S"     | Code == "T" | Code == "U"  | Code == "O84"  
+
+replace one_digit_ind =   401 if Code == "C10C12" 
+replace one_digit_ind =   402 if Code == "C13C15" 
+replace one_digit_ind =   403 if Code == "C16"		| Code == "C17" | Code == "C18"
+replace one_digit_ind =   404 if Code == "C19"
+replace one_digit_ind =   405 if Code == "C20"
+replace one_digit_ind =   406 if Code == "C21"
+replace one_digit_ind =   407 if Code == "C22" 	  | Code == "C23"
+replace one_digit_ind =   408 if Code == "C24" 	  | Code == "C25" 
+replace one_digit_ind =   409 if Code == "C26"
+replace one_digit_ind =   410 if Code == "C27" 
+replace one_digit_ind =   411 if Code == "C28" 
+replace one_digit_ind =   412 if Code == "C29"    | Code == "C30" 
+replace one_digit_ind =   413 if Code == "C31C32" | Code == "C33" 
+
+replace one_digit_ind =   14  if Code == "II"
+replace one_digit_ind =   15  if Code == "TXSP"
+replace one_digit_ind =   16  if Code == "EXP_adj"
+replace one_digit_ind =   17  if Code == "PURR"
+replace one_digit_ind =   18  if Code == "PURNR"
+replace one_digit_ind =   19  if Code == "II_adj"
+replace one_digit_ind =   20  if Code == "VA"
+replace one_digit_ind =   21  if Code == "GO"
+replace one_digit_ind =   22  if Code == "IntTTM"
+
+replace Origin = "Domestic II" if Origin == "Domestic"
+replace Origin = "Imported II" if Origin == "Imports"
+ 
+collapse (sum) A01 A02 A03 B C10C12 C13C15 C16 C17 C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31_C32 C33 D35 E36 E37E39 F G45 G46 G47 H49 H50 H51 H52 H53 I J58 J59_J60 J61 J62_J63 K64 K65 K66 L68 M69_M70 M71 M72 M73 M74_M75 N O84 P85 Q R_S T U (last) Description, by(Year Origin)
+
+gen     Type = .
+
+replace Type = 1  if Origin == "Domestic"
+replace Type = 2  if Origin == "Imports"
+replace Type = 3  if Origin == "Manufactures_Imp"
+replace Type = 4  if Origin == "II_fob"
+replace Type = 5  if Origin == "EXP_adj"
+replace Type = 6  if Origin == "PURR"
+replace Type = 7  if Origin == "PURNR"
+replace Type = 8  if Origin == "TXSP"
+replace Type = 9  if Origin == "VA"
+replace Type = 10 if Origin == "IntTTM"
+replace Type = 11 if Origin == "GO"
+
+label define Type_label 1 "Total Domestic II" 2 "Imported II, exc Manuf" 3 "Imported Man. II" 4 "II_fob" 5 "EXP_adj" 6 "PURR" 7 "PURNR" 8 "TXSP" 9 "VA" 10 "IntTTM" 11 "GO"
+label values Type Type_label
+drop Description
+
+order  Type, after (Origin)
+rename Type Description
+gen Code = .
+
+keep if Origin == "Domestic II" | Origin == "Imported II" | Origin == "Manufactures_Imp"
+
+*replace Code  = 1 if Origin == "Domestic"
+*replace Code  = 2 if Origin == "Imports"
+*replace Code  = 3 if Origin == "Manufactures_Imp"
+*label define Code_label 1 "Total Domestic II" 2 "Imported II, exc Manuf" 3 "Imported Man. II" 
+*label values Code Code_label
+
+*save "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/II_Table_USA.dta",replace
+save "C:\Users\h1jiv01\Desktop\II_Table_USA.dta",replace
+
+*---------------------------------------------------------------------------------------------------------------------------
+*Step 2: take the supply table and keep total supply and final import to add them to the use table
+clear all
+cls
+
+*use "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/SUP_Table_USA.dta"
+use  "C:\Users\h1jiv01\Desktop\SUP_Table_USA.dta"
+rename year Year
+rename code Code
+
+keep Year Code DSUP_bas IMP SUP_bas 
+
+drop if DSUP_bas == .
+
+order DSUP_bas IMP SUP_bas, last
+
+destring Year, replace
+
+replace Code =   "A01" 		if Code == 	"CPA_A01"
+replace Code =   "A02" 		if Code ==	"CPA_A02"
+replace Code =   "A03" 		if Code ==  "CPA_A03"
+replace Code =   "B" 		if Code ==  "CPA_B"
+replace Code =   "C10-C12" 	if Code ==  "CPA_C10-C12"
+replace Code =   "C13-C15" 	if Code ==  "CPA_C13-C15"
+replace Code =   "C16" 		if Code ==  "CPA_C16"
+replace Code =   "C17" 		if Code ==  "CPA_C17"
+replace Code =   "C18" 		if Code ==  "CPA_C18"
+replace Code =   "C19" 		if Code ==  "CPA_C19"
+replace Code =   "C20" 		if Code ==  "CPA_C20"
+
+replace Code =   "C21" 		if Code ==   "CPA_C21"
+replace Code =   "C22" 		if Code ==   "CPA_C22"
+replace Code =   "C23" 		if Code ==   "CPA_C23"
+replace Code =   "C24" 		if Code ==   "CPA_C24"
+replace Code =   "C25" 		if Code ==   "CPA_C25"
+replace Code =   "C26" 		if Code ==   "CPA_C26"
+replace Code =   "C27" 		if Code ==   "CPA_C27"
+replace Code =   "C28" 		if Code ==   "CPA_C28"
+replace Code =   "C29" 		if Code ==   "CPA_C29"
+replace Code =   "C30" 		if Code ==   "CPA_C30"
+
+replace Code =   "C31_C32"  if Code ==   "CPA_C31_C32"
+
+replace Code =   "C33" 		if Code ==   "CPA_C33"
+replace Code =   "D35" 		if Code ==   "CPA_D35"
+replace Code =   "E36" 		if Code ==   "CPA_E36"
+
+replace Code =   "E37-E39"  if Code ==   "CPA_E37-E39"
+
+replace Code =   "F" 		if Code ==   "CPA_F"
+
+replace Code =   "G45" 		if Code ==   "CPA_G45"
+replace Code =   "G46" 		if Code ==   "CPA_G46"
+replace Code =   "G47" 		if Code ==   "CPA_G47"
+
+replace Code =   "H49" 		if Code ==   "CPA_H49"
+replace Code =   "H50" 		if Code ==   "CPA_H50"
+replace Code =   "H51" 		if Code ==   "CPA_H51"
+replace Code =   "H52" 		if Code ==   "CPA_H52"
+replace Code =   "H53" 		if Code ==   "CPA_H53"
+
+replace Code =   "I" 		if Code ==   "CPA_I"
+
+replace Code =   "J58" 		if Code ==   "CPA_J58"
+replace Code =   "J59_J60"  if Code ==   "CPA_J59_J60"
+
+replace Code =   "J61"  	if Code ==   "CPA_J61"
+
+replace Code =   "J62_J63"  if Code ==   "CPA_J62_J63"
+
+replace Code =   "K64"  	if Code ==   "CPA_K64"
+replace Code =   "K65"  	if Code ==   "CPA_K65"
+replace Code =   "K66"  	if Code ==   "CPA_K66"
+
+replace Code =   "L68"		if Code == "CPA_L68"
+replace Code =   "M69_M70" 	if Code == "CPA_M69_M70"
+replace Code =   "M71" 		if Code == "CPA_M71" 
+replace Code =   "M72" 		if Code == "CPA_M72"
+replace Code =   "M73" 		if Code == "CPA_M73"
+replace Code =   "M74_M75" 	if Code == "CPA_M74_M75"
+replace Code =   "N" 		if Code == "CPA_N77" 
+replace Code =   "N" 		if Code == "CPA_N78"
+replace Code =   "N" 		if Code == "CPA_N79"
+replace Code =   "N" 		if Code == "CPA_N80-N82"
+replace Code =   "O84" 		if Code == "CPA_O84"
+replace Code =   "P85" 		if Code == "CPA_P85" 
+replace Code =   "Q" 		if Code == "CPA_Q86"
+replace Code =   "Q"	 	if Code == "CPA_Q87_Q88"
+replace Code = 	 "R_S" 		if Code == "CPA_R90-R92" 
+replace Code =   "R_S" 		if Code == "CPA_R93" 
+replace Code =   "R_S" 		if Code == "CPA_S94"
+replace Code =   "R_S" 		if Code == "CPA_S95" 
+replace Code =   "R_S" 		if Code == "CPA_S96" 
+
+replace Code = "T" 			if Code == "CPA_T" 
+replace Code = "U" 			if Code == "CPA_U" 
+
+*---------------------------------------------------------------------------------------------------------------------------
+*Step 3: merge it with the use table and aggregate industries according to one-digit NACE aggregation
+
+*merge 1:m Year Code using "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/IO_Table_USA.dta"
+ merge m:m Year Code using "C:\Users\h1jiv01\Desktop\IO_Table_USA.dta"
+ 
+order DSUP_bas IMP SUP_bas, last
+drop _merge
+
+replace Origin = "TOT" if Code == "GO_adj" 
+replace Origin = "TOT" if Code == "IMP_adj" 
+
+sort Year Origin Code 
+
+*unab varlist    : _all
+*unab exclude    : Year Code
+*local varlist_1 : list varlist - exclude
+*collapse (sum) `varlist_1', by (Year Code) 
+*drop if _merge == 1 | _merge == 2
+*drop    _merge 
+
+gen     one_digit_ind =   . 
+replace one_digit_ind =   1 if Code == "A01" 	 | Code == "A02" 		| Code == "A03"
+replace one_digit_ind =   2 if Code == "B"   	 | Code == "D35" 		| Code == "E36" | Code == "E37-E39"
+replace one_digit_ind =   3 if Code == "F"   
+replace one_digit_ind =   4 if Code == "C10-C12" | Code == "C13-C15"    | Code == "C16"	| Code == "C17" | Code == "C18" | Code == "C19" |	Code == "C20" |	Code == "C21" |	Code == "C22" |	Code == "C23" | Code == "C24" |	Code == "C25" |Code == "C26" |	Code == "C27" |	Code == "C28" |	Code == "C29" |	Code == "C30" |Code == "C31_C32" |	Code == "C33" 
+replace one_digit_ind =   5 if Code == "G45"     | Code == "G46"        | Code == "G47" 
+replace one_digit_ind =   6 if Code == "H49"     | Code == "H50"        | Code == "H51" | Code == "H52" | Code == "H53" 
+replace one_digit_ind =   7 if Code == "I" 
+replace one_digit_ind =   8 if Code == "J58"	 | Code == "J59_J60"	| Code == "J61"	| Code == "J62_J63"
+replace one_digit_ind =   9 if Code == "K64"	 | Code == "K65"	    | Code == "K66"
+replace one_digit_ind =  10 if Code == "L68"
+replace one_digit_ind =  11 if Code == "M69_M70" | Code == "M71"        | Code == "M72" | Code == "M73" | Code == "M74_M75" | Code == "N" 
+replace one_digit_ind =  12 if Code == "Q"       | Code == "P85"   
+replace one_digit_ind =  13 if Code == "R_S"     | Code == "T"          | Code == "U"   | Code == "O84" | Code == "Q" 
+
+replace one_digit_ind = 401 if Code == "C10-C12" 
+replace one_digit_ind = 402 if Code == "C13-C15" 
+replace one_digit_ind = 403 if Code == "C16"		| Code == "C17" | Code == "C18"
+replace one_digit_ind = 404 if Code == "C19"
+replace one_digit_ind = 405 if Code == "C20"
+replace one_digit_ind = 406 if Code == "C21"
+replace one_digit_ind = 407 if Code == "C22" 		| Code == "C23"
+replace one_digit_ind = 408 if Code == "C24" 		| Code == "C25" 
+replace one_digit_ind = 409 if Code == "C26"
+replace one_digit_ind = 410 if Code == "C27" 
+replace one_digit_ind = 411 if Code == "C28" 
+replace one_digit_ind = 412 if Code == "C29"     	| Code == "C30" 
+replace one_digit_ind = 413 if Code == "C31_C32" 	| Code == "C33" 
+
+replace one_digit_ind = 14  if Code == "II"
+replace one_digit_ind = 15  if Code == "TXSP"
+replace one_digit_ind = 16  if Code == "EXP_adj"
+replace one_digit_ind = 17  if Code == "PURR"
+replace one_digit_ind = 18  if Code == "PURNR"
+replace one_digit_ind = 19  if Code == "II_adj"
+replace one_digit_ind = 20  if Code == "VA"
+replace one_digit_ind = 21  if Code == "GO"
+replace one_digit_ind = 22  if Code == "GO_adj"
+replace one_digit_ind = 23  if Code == "II_fob"
+replace one_digit_ind = 24  if Code == "IMP_adj"
+replace one_digit_ind = 25  if Code == "IntTTM"
+
+drop if one_digit_ind == .
+
+*gen N 	    = N77 + N78 + N79 + N80N82
+*gen Q       = Q86 + Q87_Q88					
+*gen R_S     = R90R92 + R93 + S94 + S95 + S96 
+*drop N77 N78 N79 N80N82 Q86 Q87_Q88 R90R92 R93 S94 S95 S96 
+
+encode Description, generate(description)
+drop   Description
+rename description Description
+
+*append using "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/II_Table_USA.dta"
+append using "C:\Users\h1jiv01\Desktop\II_Table_USA.dta", force
+
+replace Code   = "Total Domestic II" 			   if Origin == "Domestic II"
+replace Code   = "Imported II excl Manuf"          if Origin == "Imported II"
+replace Code   = "Imported Manuf II"               if Origin == "Manufactures_Imp" 
+
+replace Origin = "International Transport Margins" if Code   == "IntTTM"
+replace Origin = "Exp Adjusted"                    if Code   == "EXP_adj"
+replace Origin = "Gross Output"                    if Code   == "GO"
+replace Origin = "Gross Output Adjusted"           if Code   == "GO_adj"
+replace Origin = "II_fob"                          if Code   == "II_fob"
+replace Origin = "Imp Adjusted"                    if Code   == "IMP_adj"
+replace Origin = "Value Added"                     if Code   == "VA"
+replace Origin = "Other"                           if Origin == "TOT"
+replace Origin = "Taxes less Subsidies"            if Code   == "TXSP"
+
+replace one_digit_ind = 26  if Code == "Total Domestic II"
+replace one_digit_ind = 27  if Code == "Imported II excl Manuf"
+replace one_digit_ind = 28  if Code == "Imported Manuf II"
+
+order N, after (M74_M75)
+order Q R_S, after (P85)
+order one_digit_ind, after (Code)
+
+gen A         =     A01  + A02    + A03
+gen B_D_E     =       B  + D35    + E36 + E37E39 
+
+gen Manufacturing  =   C10C12 + C13C15 + C16 +    C17 + C18 + C19 + C20 + C21 + C22 + C23 + C24+C25+C26+C27+C28+C29+C30+C31_C32+C33	
+
+gen CA        = C10C12
+gen CB		  = C13C15
+gen CC		  = C16 + C17 + C18
+gen CD		  = C19
+gen CE		  = C20
+gen CF		  = C21
+gen CG		  = C22 + C23
+gen CH		  = C24 + C25
+gen CI		  = C26 
+gen CJ		  = C27 
+gen CK		  = C28 
+gen CL		  = C29 + C30 
+gen CM		  = C31_C32 + C33  
+
+gen G   	  = G45 + G46 + G47
+gen H   	  = H49 + H50 + H51 + H52 + H53				
+*gen I   	  = I								
+gen J   	  = J58 + J59_J60 + J61 + J62_J63					
+gen K   	  = K64 +	K65 + K66						
+gen L   	  = L68								
+gen M_N 	  = M69_M70 + M71 + M72 + M73 + M74_M75 + N
+gen P_Q       = P85 + Q				
+gen O_R_S_T_U = O84 + R_S + T + U		
+
+gen Services  = G + H + I + J + K + L + M_N + P_Q + O_R_S_T_U
+gen Goods     = A + B_D_E +	F + Manufacturing
+
+gen Other_Traditional_Services  = G + I + O_R_S_T_U
+gen Other_Modern_Services       = J + L + M_N
+
+gen Traditional_Services   = G + H + I + O_R_S_T_U + P_Q 
+gen Modern_Services        = J + K + L + M_N
+
+gen CONS = CONS_h + CONS_np + CONS_g
+drop CONS_h  CONS_np  CONS_g
+keep Year Code Description Origin one_digit_ind Goods A B_D_E Manufacturing CA CB CC CD CE CF CG CH CI CJ CK CL CM F Services Traditional_Services H P_Q Other_Traditional_Services G I O_R_S_T_U Modern_Services K Other_Modern_Services J L M_N CONS GFCF INVEN EXP GO DSUP_bas IMP SUP_bas 
+
+collapse (sum) Goods A B_D_E Manufacturing CA CB CC CD CE CF CG CH CI CJ CK CL CM F Services Traditional_Services H P_Q Other_Traditional_Services G I O_R_S_T_U Modern_Services K Other_Modern_Services J L M_N CONS GFCF INVEN EXP GO DSUP_bas IMP SUP_bas (last) Description, by(Year one_digit_ind) 
+
+order Description, after (one_digit_ind)
+sort  Year one_digit_ind
+
+gen desc = one_digit_ind
+
+label define ind_labels  1 "Agriculture, Forestry and Fishing" 2 "Mining,Quarrying and Other Industry" 3 "Construction" 4 "Manufacturing"  401 "Food, Beverage and Tobacco products" 402 "Textiles, Apparel, Leather and related products" 403 "Wood, Paper Products, and Printing" 404 "Coke, and Refined Petroleum products" 405 "Chemicals and chemical products" 406 "Pharmaceuticals, Medicinal, Chemical and Botanical products" 407 "Rubber and Plastics products, and other non-metallic mineral products" 408	"Basic and Fabricated Metals"  409	"Computer, Electronic and Optical Products" 410	"Electrical Equipment" 411	"Machinery and Equipment n.e.c." 412 "Transport Equipment" 413	"Other Manufacturing" 5	"Wholesale and Retail Trade" 6	"Transportation and Storage" 7	"Accommodation and Food services" 8	"Information and Communication" 9 "Financial and Insurance Activities" 10 "Real Estate" 11  "Professional, Scientific, Technical, Administration and Support service activities" 12	"Public Administration and Defense" 13  "Other services" 4 "II" 15 "TXSP" 16 "EXP_adj" 17 "PURR" 18 "PURNR" 19 "II_adj" 20 "Value Added" 21 "Gross Output" 22 "Gross Output Adjusted" 23 "II_FOB" 24 "Imp_Adj" 25 "Int_TTM" 26  "Total Domestic II" 27  "Imported II excl Manuf" 28  "Imported Manuf II"
+
+label values desc ind_labels
+
+drop Description
+rename desc Description
+
+order  Description, after (one_digit_ind)
+/*
+rename A 		Agriculture, forestry and fishing
+rename B_D_E 	Mining and quarrying and other industry
+rename F		Construction
+rename C		Manufacturing
+rename CA		Food products, beverages and tobacco products
+rename CB		Textiles, apparel, leather and related products
+rename CC		Wood and paper products, and printing
+rename CD		Coke, and refined petroleum products
+rename CE		Chemicals and chemical products
+rename CF		Pharmaceuticals, medicinal chemical and botanical products
+rename CG		Rubber and plastics products, and other non-metallic mineral products
+rename CH		Basic metals and fabricated metal products, except machinery and equipment
+rename CI		Computer, electronic and optical products
+rename CJ		Electrical equipment
+rename CK		Machinery and equipment n.e.c.
+rename CL		Transport equipment
+rename CM		Other manufacturing, and repair and installation of machinery and equipment
+rename G		Wholesale and retail trade
+rename H		Transportation and storage
+rename I		Accommodation and food service activities
+rename J		Information and communication
+rename K		Financial and insurance activities
+rename L		Real estate activities
+rename M_N		Professional, scientific, technical, administration and support service activities
+rename P_Q	Health and Education
+rename O_R_S_T_U	Other services
+*/
+
+/*														
+/*														
+1 Agriculture, Forestry and Fishing             					Code == "A01"     | Code == "A02" | Code == "A03"
+2 Mining,Quarrying and Other Industry  							Code == "B"       | Code == "D35" | Code == "E36" | Code == "E37E39"
+3 Construction 										Code == "F" 
+4 Manufacturing  									Code == "C10C12"  | Code == "C13C15"     | Code == "C16"	| Code == "C17" | Code == "C18" | Code == "C19" |	Code == "C20" |	Code == "C21" |	Code == "C22" |	Code == "C23" | Code == "C24" |	Code == "C25" |Code == "C26" |	Code == "C27" |	Code == "C28" |	Code == "C29" |	Code == "C30" |Code == "C31C32" |	Code == "C33" 
+401 Food, beverage and tobacco products 						Code == "C10C12"
+402 Textiles, Apparel, leather and related products     				Code == "C13C15"
+403 Wood, Paper Products, and Printing                  				Code == "C16"     | Code == "C17" | Code == "C18"
+404 Coke, and Refined Petroleum products                				Code == "C19"
+405 Chemicals and chemical products 							Code == "C20"
+406 Pharmaceuticals, medicinal chemical and botanical products 				Code == "C21"
+407 Rubber and plastics products, and other non-metallic mineral products 		Code == "C22" 	  | Code == "C23"
+408	Basic metals and fabricated metal products, except machinery and equipment 	Code == "C24" 	  | Code == "C25"
+409	Computer, Electronic and optical products 					Code == "C26"
+410	Electrical Equipment  								Code == "C27" 
+411	Machinery and equipment n.e.c.  						Code == "C28" 
+412	Transport equipment 								Code == "C29" 	  | Code == "C30"
+413	Other manufacturing, and repair and installation of machinery and equipment     Code == "C31C32"  | Code == "C33"
+5	Wholesale and Retail Trade   	        Code == "G45"     | Code == "G46"        | Code == "G47"
+6	Transportation and Storage 		Code == "H49"     | Code == "H50"        | Code == "H51" | Code == "H52" | Code == "H53"
+7	Accommodation and Food services         Code == "I" 
+8	Information and Communication           Code == "J58"	  | Code == "J59J60"	 | Code == "J61" | Code == "J62J63"
+9	Financial and Insurance activities      Code == "K64"     | Code == "K65"	 | Code == "K66"
+10	Real Estate activities                  Code == "L68"
+11  Professional, Scientific, Technical, Administration and Support service activities      Code == "M69M70"  | Code == "M71"
+12	Public administration, defence, education, human health and social work activities  Code == "P85"     | Code == "Q86"
+13  Other services								            Code == "R_S"     | Code == "T"   | Code == "U"
+14 II 
+15 TXSP 
+16 EXP_adj 
+17 PURR 
+18 PURNR 
+19 II_adj 
+20 VA 
+21 GO
+1001 Total Domestice Intermediate Inputs 
+1002 Total Imported Intermediate Inputs 
+1003 Internation Transport Margins
+*/
+																								
+
+
