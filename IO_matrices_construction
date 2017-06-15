@@ -1,0 +1,269 @@
+* This do_file is used to construct summarized input-output tables
+
+*COUNTRY      : USA
+
+*This version : June 3 2017
+
+*Data Source  : WIOD; nov 2016 update
+
+*Link         : http://www.wiod.org/database/wiots16
+
+*---------------------------------------------------------------------------------------------------------------------------
+*INSTRUCTIONS : Create three .dta files: one with the IO data, one with the SUPPLY data and one with the USE data
+*                                       (IO_Table_XXX, SUP_Table_USA, USE_Table_USA) 
+*               Change the name of the directories and run the code
+*---------------------------------------------------------------------------------------------------------------------------
+
+clear all
+cls
+
+*---------------------------------------------------------------------------------------------------------------------------
+*Step 1: take the input-output table to distinguish between domestic and imported inputs
+
+use "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/IO_Table_USA.dta"
+
+rename Year year
+rename Description description
+drop if Origin == "TOT" & Code == "II_fob" | Origin == "TOT" & Code == "TXSP" | Origin == "TOT" & Code == "EXP_adj"	| Origin == "TOT" & Code == "PURR"	| Origin == "TOT" & Code == "PURNR"		
+
+replace Origin = "VA"     if Code == "VA"
+replace Origin = "IntTTM" if Code == "IntTTM"
+replace Origin = "GO"     if Code == "GO"
+				
+collapse (sum) A01 A02 A03 B C10C12 C13C15 C16 C17 C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31_C32 C33 D35 E36 E37E39 F G45 G46 G47 H49 H50 H51 H52 H53 I J58 J59_J60 J61 J62_J63 K64 K65 K66 L68 M69_M70 M71 M72 M73 M74_M75 N O84 P85 Q R_S T U (last) description, by(year Origin)
+
+rename Origin code
+
+gen     desc = .
+
+replace desc = 1 if code == "Domestic"
+replace desc = 2 if code == "Imports"
+replace desc = 3 if code == "IntTTM"
+replace desc = 4 if code == "VA"
+replace desc = 5 if code == "GO"
+
+label define II_label 1 "Total Domestic II" 2 "Total Imported II" 3 "International Transport Margins" 4 "Value Added" 5 "Gross Output"
+label values desc II_label
+drop description
+
+save "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/II_Table_USA.dta",replace
+
+*---------------------------------------------------------------------------------------------------------------------------
+*Step 2: take the supply table and keep total supply and final import to add them to the use table
+
+use "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/SUP_Table_USA.dta"
+
+keep year code DSUP_bas IMP SUP_bas 
+
+drop if DSUP_bas == .
+
+order DSUP_bas IMP SUP_bas, last
+
+*---------------------------------------------------------------------------------------------------------------------------
+*Step 3: merge it with the use table and aggregate industries according to one-digit NACE aggregation
+
+merge 1:m year code using "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/USE_Table_USA.dta"
+
+drop if _merge == 1 | _merge == 2
+drop    _merge 
+
+order DSUP_bas IMP SUP_bas, last
+
+drop if code == "GO"
+
+gen     one_digit_ind =  . 
+replace one_digit_ind =   1 if code == "CPA_A01" | code == "CPA_A02" | code == "CPA_A03"
+replace one_digit_ind =   2 if code == "CPA_B"   | code == "CPA_D35" | code == "CPA_E36" | code == "CPA_E37-E39"
+replace one_digit_ind =   3 if code == "CPA_F"   
+replace one_digit_ind =   4 if code == "CPA_C10-C12" | code == "CPA_C13-C15"    | code == "CPA_C16"	| code == "CPA_C17" | code == "CPA_C18" | code == "CPA_C19" |	code == "CPA_C20" |	code == "CPA_C21" |	code == "CPA_C22" |	code == "CPA_C23" | code == "CPA_C24" |	code == "CPA_C25" |code == "CPA_C26" |	code == "CPA_C27" |	code == "CPA_C28" |	code == "CPA_C29" |	code == "CPA_C30" |code == "CPA_C31_C32" |	code == "CPA_C33" 
+replace one_digit_ind =   5 if code == "CPA_G45"     | code == "CPA_G46"        | code == "CPA_G47" 
+replace one_digit_ind =   6 if code == "CPA_H49"     | code == "CPA_H50"        | code == "CPA_H51" | code == "CPA_H52" | code == "CPA_H53" 
+replace one_digit_ind =   7 if code == "CPA_I" 
+replace one_digit_ind =   8 if code == "CPA_J58"	   | code == "CPA_J59_J60"	| code == "CPA_J61"	| code == "CPA_J62_J63"
+replace one_digit_ind =   9 if code == "CPA_K64"	   | code == "CPA_K65"	    | code == "CPA_K66"
+replace one_digit_ind =  10 if code == "CPA_L68"
+replace one_digit_ind =  11 if code == "CPA_M69_M70" | code == "CPA_M71"        | code == "CPA_M72" | code == "CPA_M73" | code == "CPA_M74_M75" | code == "CPA_N77" | code == "CPA_N78" | code == "CPA_N79" | code == "CPA_N80-N82"
+replace one_digit_ind =  12 if code == "CPA_P85"     | code == "CPA_Q86" 
+replace one_digit_ind =  13 if code == "CPA_R90-R92" | code == "CPA_R93"        | code == "CPA_S94" | code == "CPA_S95" | code == "CPA_S96" | code == "CPA_T" | code == "CPA_U" | code == "CPA_O84" | code == "CPA_Q87_Q88" 
+
+replace one_digit_ind =   401 if code == "CPA_C10-C12" 
+replace one_digit_ind =   402 if code == "CPA_C13-C15" 
+replace one_digit_ind =   403 if code == "CPA_C16"		| code == "CPA_C17" | code == "CPA_C18"
+replace one_digit_ind =   404 if code == "CPA_C19"
+replace one_digit_ind =   405 if code == "CPA_C20"
+replace one_digit_ind =   406 if code == "CPA_C21"
+replace one_digit_ind =   407 if code == "CPA_C22" 		| code == "CPA_C23"
+replace one_digit_ind =   408 if code == "CPA_C24" 		| code == "CPA_C25" 
+replace one_digit_ind =   409 if code == "CPA_C26"
+replace one_digit_ind =   410 if code == "CPA_C27" 
+replace one_digit_ind =   411 if code == "CPA_C28" 
+replace one_digit_ind =   412 if code == "CPA_C29"     | code == "CPA_C30" 
+replace one_digit_ind =   413 if code == "CPA_C31_C32" | code == "CPA_C33" 
+
+replace one_digit_ind =   14  if code == "II"
+replace one_digit_ind =   15  if code == "TXSP"
+replace one_digit_ind =   16  if code == "EXP_adj"
+replace one_digit_ind =   17  if code == "PURR"
+replace one_digit_ind =   18  if code == "PURNR"
+replace one_digit_ind =   19  if code == "II_adj"
+replace one_digit_ind =   20  if code == "VA"
+replace one_digit_ind =   21  if code == "GO"
+
+drop if one_digit_ind == .
+destring year, replace
+
+gen N 	    = N77 + N78 + N79 + N80N82
+gen Q       = Q86 + Q87_Q88					
+gen R_S     = R90R92 + R93 + S94 + S95 + S96 
+
+drop N77 N78 N79 N80N82 Q86 Q87_Q88 R90R92 R93 S94 S95 S96 
+
+encode desc, generate(description)
+drop   desc
+rename description desc
+
+append using "/Users/Nachito/Desktop/Dropbox/IO Matrices/May_2017/Latest_Matrices/USA/II_Table_USA.dta"
+
+decode desc, generate(desc1)
+drop desc
+rename desc1 desc
+
+replace desc = "Total Domestic II" if code == "Domestic"
+replace desc = "Total Imported II" if code == "Imports"
+replace desc = "International Transport Margins" if code == "TOT"
+
+order N, after (M74_M75)
+order Q R_S, after (P85)
+order one_digit_ind, after (code)
+
+gen A         =     A01  + A02    + A03
+gen B_D_E     =       B  + D35    + E36 + E37E39 
+
+gen Manufacturing  =   C10C12 + C13C15 + C16 +    C17 + C18 + C19 + C20 + C21 + C22 + C23 + C24+C25+C26+C27+C28+C29+C30+C31_C32+C33	
+
+gen CA        = C10C12
+gen CB		  = C13C15
+gen CC		  = C16 + C17 + C18
+gen CD		  = C19
+gen CE		  = C20
+gen CF		  = C21
+gen CG		  = C22 + C23
+gen CH		  = C24 + C25
+gen CI		  = C26 
+gen CJ		  = C27 
+gen CK		  = C28 
+gen CL		  = C29 + C30 
+gen CM		  = C31_C32 + C33  
+
+gen G   	  = G45 + G46 + G47
+gen H   	  = H49 + H50 + H51 + H52 + H53				
+*gen I   	  = I								
+gen J   	  = J58 + J59_J60 + J61 + J62_J63					
+gen K   	  = K64 +	K65 + K66						
+gen L   	  = L68								
+gen M_N 	  = M69_M70 + M71 + M72 + M73 + M74_M75 + N
+gen P_Q       = P85 + Q				
+gen O_R_S_T_U = O84 + R_S + T + U		
+
+gen Services  = G + H + I + J + K + L + M_N + P_Q + O_R_S_T_U
+gen Goods     = A + B_D_E +	F + Manufacturing
+
+gen Other_Traditional_Services  = G + I + O_R_S_T_U
+gen Other_Modern_Services       = J + L + M_N
+
+gen Traditional_Services   = G + H + I + O_R_S_T_U + P_Q 
+gen Modern_Services        = J + K + L + M_N
+
+rename desc description
+
+replace one_digit_ind =  1001 if code == "Domestic"
+replace one_digit_ind =  1002 if code == "Imports"
+replace one_digit_ind =  1003 if code == "IntTTM"
+replace one_digit_ind =  1004 if code == "VA"
+replace one_digit_ind =  1005 if code == "GO"
+
+replace description = "International Transport Margins" if code == "IntTTM"
+replace description = "Value Added" if code == "VA"
+replace description = "Gross Output" if code == "GO"
+
+keep year code description one_digit_ind Goods A B_D_E Manufacturing CA CB CC CD CE CF CG CH CI CJ CK CL CM F Services Traditional_Services H P_Q Other_Traditional_Services G I O_R_S_T_U Modern_Services K Other_Modern_Services J L M_N INTC CONS GCF EXP_fob USE_bas DSUP_bas IMP SUP_bas 
+
+collapse (sum) Goods A B_D_E Manufacturing CA CB CC CD CE CF CG CH CI CJ CK CL CM F Services Traditional_Services H P_Q Other_Traditional_Services G I O_R_S_T_U Modern_Services K Other_Modern_Services J L M_N INTC CONS GCF EXP_fob USE_bas DSUP_bas IMP SUP_bas (last) description, by(year one_digit_ind) 
+
+order description, after (one_digit_ind)
+sort year one_digit_ind
+
+/*
+label define ind_labels  1 Agriculture, Forestry and Fishing 2 Mining,Quarrying and Other Industry 3 Construction 4 Manufacturing  401 Food, beverage and tobacco products 402 Textiles, Apparel, leather and related products 403 Wood, Paper Products, and Printing 404 Coke, and Refined Petroleum products 405 Chemicals and chemical products 406 Pharmaceuticals, medicinal chemical and botanical products 407 Rubber and plastics products, and other non-metallic mineral products 408	Basic metals and fabricated metal products, except machinery and equipment 409	Computer, Electronic and optical products 410	Electrical Equipment 411	Machinery and equipment n.e.c. 412	Transport equipment 413	Other manufacturing, and repair and installation of machinery and equipment 5	Wholesale and Retail Trade 6	Transportation and Storage 7	Accommodation and Food services 8	Information and Communication 9	Financial and Insurance activities 10	Real Estate activities 11  Professional, Scientific, Technical, Administration and Support service activities 12	Public administration, defence, education, human health and social work activities 13  Other services14 II 15 TXSP 16 EXP_adj 17 PURR 18 PURNR 19 II_adj 20 VA 21 GO1001 Total Domestice Intermediate Inputs 1002 Total Imported Intermediate Inputs 1003 Internation Transport Margins
+label values one_digit_ind ind_labels
+
+rename A 		Agriculture, forestry and fishing
+rename B_D_E 	Mining and quarrying and other industry
+rename F		Construction
+rename C		Manufacturing
+rename CA		Food products, beverages and tobacco products
+rename CB		Textiles, apparel, leather and related products
+rename CC		Wood and paper products, and printing
+rename CD		Coke, and refined petroleum products
+rename CE		Chemicals and chemical products
+rename CF		Pharmaceuticals, medicinal chemical and botanical products
+rename CG		Rubber and plastics products, and other non-metallic mineral products
+rename CH		Basic metals and fabricated metal products, except machinery and equipment
+rename CI		Computer, electronic and optical products
+rename CJ		Electrical equipment
+rename CK		Machinery and equipment n.e.c.
+rename CL		Transport equipment
+rename CM		Other manufacturing, and repair and installation of machinery and equipment
+rename G		Wholesale and retail trade
+rename H		Transportation and storage
+rename I		Accommodation and food service activities
+rename J		Information and communication
+rename K		Financial and insurance activities
+rename L		Real estate activities
+rename M_N		Professional, scientific, technical, administration and support service activities
+rename P_Q	Health and Education
+rename O_R_S_T_U	Other services
+*/
+
+
+/*														
+1 Agriculture, Forestry and Fishing 
+2 Mining,Quarrying and Other Industry 
+3 Construction 4 Manufacturing  
+401 Food, beverage and tobacco products 
+402 Textiles, Apparel, leather and related products 
+403 Wood, Paper Products, and Printing 
+404 Coke, and Refined Petroleum products 
+405 Chemicals and chemical products 
+406 Pharmaceuticals, medicinal chemical and botanical products 
+407 Rubber and plastics products, and other non-metallic mineral products 
+408	Basic metals and fabricated metal products, except machinery and equipment 
+409	Computer, Electronic and optical products 
+410	Electrical Equipment 
+411	Machinery and equipment n.e.c. 
+412	Transport equipment 
+413	Other manufacturing, and repair and installation of machinery and equipment 
+5	Wholesale and Retail Trade 
+6	Transportation and Storage 
+7	Accommodation and Food services 
+8	Information and Communication 
+9	Financial and Insurance activities 
+10	Real Estate activities 
+11  Professional, Scientific, Technical, Administration and Support service activities 
+12	Public administration, defence, education, human health and social work activities 
+13  Other services
+14 II 
+15 TXSP 
+16 EXP_adj 
+17 PURR 
+18 PURNR 
+19 II_adj 
+20 VA 
+21 GO
+1001 Total Domestice Intermediate Inputs 
+1002 Total Imported Intermediate Inputs 
+1003 Internation Transport Margins
+*/
+														
+
+
